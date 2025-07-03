@@ -1,0 +1,41 @@
+.Dd July 2, 2025
+.Dt PLAKAR-IMAP 1
+.Os
+.Sh NAME
+.Nm plakar-imap
+.Sh DESCRIPTION
+The
+.Nm
+module allows for backup of an IMAP mailbox.
+.Sh CONFIGURATION
+The configuration parameters are as follow:
+.Bl -tag -width Ds
+.It Ar username
+Username to login.
+.It Ar password
+Password for login
+.It Ar tls
+TlS mode to use.
+Possible values are
+.Li tls
+(the default),
+.Li starttls
+and
+.Li no-tls .
+.El
+.Sh EXAMPLES
+The following example shows how to configure a source called
+.Li mymail
+for an IMAP mailbox to backup:
+.Bd -literal -offset indent
+$ plakar source add mymail imap://my.imap.server.com:143 username=foo password=bar tls=starttls
+.Ed
+.Pp
+Supposing that a Plakar store named
+.Li mystore
+is already configured, the following command will backup the above mailbox to this store:
+.Bd -literal -offset indent
+$ plakar at @mystore backup @mymail
+.Ed
+.Sh LIMITATIONS
+The current implementation is very simple.

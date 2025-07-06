@@ -12,7 +12,6 @@ import (
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/emersion/go-imap/v2"
-	"github.com/emersion/go-imap/v2/imapclient"
 )
 
 type ImapImporter struct {
@@ -48,22 +47,22 @@ func (imp *ImapImporter) Scan() (<-chan *importer.ScanResult, error) {
 	result := make(chan *importer.ScanResult, 10)
 	go func() {
 		defer close(result)
-		client, err := imp.connector.Connect()
+		session, err := imp.connector.Connect()
 		if err != nil {
 			result <- importer.NewScanError("/", err)
 			return
 		}
 
-		mailboxes, err := imp.listMailboxes(client)
+		mailboxes, err := session.List()
 		if err != nil {
 			result <- importer.NewScanError("/", err)
 		}
 		for _, mbox := range mailboxes {
 			result <- imp.makeMailboxRecord(mbox)
-			imp.scanMailbox(client, mbox.Mailbox, result)
+			imp.scanMailbox(session, mbox.Mailbox, result)
 		}
 
-		err = client.Logout().Wait()
+		err = session.Logout()
 		if err != nil {
 			result <- importer.NewScanError("/", err)
 			return
@@ -78,38 +77,13 @@ func (imp *ImapImporter) Close() error {
 	return nil
 }
 
-func (imp *ImapImporter) listMailboxes(client *imapclient.Client) ([]*imap.ListData, error) {
-	var res []*imap.ListData
-
-	listCmd := client.List("", "%", &imap.ListOptions{
-		ReturnStatus: &imap.StatusOptions{
-			NumMessages: true,
-			NumUnseen:   true,
-		},
-	})
-	for {
-		mbox := listCmd.Next()
-		if mbox == nil {
-			break
-		}
-		res = append(res, mbox)
-	}
-	if err := listCmd.Close(); err != nil {
-		return nil, fmt.Errorf("LIST command failed: %v", err)
-	}
-
-	return res, nil
-}
-
-func (imp *ImapImporter) scanMailbox(client *imapclient.Client, mailbox string, out chan *importer.ScanResult) error {
-	_, err := client.Select(mailbox, &imap.SelectOptions{
-		ReadOnly: true,
-	}).Wait()
+func (imp *ImapImporter) scanMailbox(session *common.ImapSession, mailbox string, out chan *importer.ScanResult) error {
+	err := session.Select(mailbox, true)
 	if err != nil {
 		return fmt.Errorf("SELECT command failed: %w", err)
 	}
 
-	searchData, err := client.UIDSearch(
+	searchData, err := session.Client.UIDSearch(
 		&imap.SearchCriteria{},
 		&imap.SearchOptions{
 			ReturnMin: true,
@@ -133,7 +107,7 @@ func (imp *ImapImporter) scanMailbox(client *imapclient.Client, mailbox string, 
 				},
 			},
 		}
-		messages, err := client.Fetch(seq, opts).Collect()
+		messages, err := session.Client.Fetch(seq, opts).Collect()
 		if err != nil {
 			out <- importer.NewScanError(path, err)
 			continue

@@ -2,30 +2,23 @@ package exporter
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strings"
 
 	"github.com/PlakarKorp/integration-imap/common"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
-	"github.com/emersion/go-imap/v2"
-	"github.com/emersion/go-imap/v2/imapclient"
 )
 
 type ImapExporter struct {
 	ctx       context.Context
 	connector common.ImapConnector
-	client    *imapclient.Client
-	buf       []byte
+	session   *common.ImapSession
 }
-
-const MB = 1048576
 
 func NewImapExporter(ctx context.Context, opts *exporter.Options, name string, config map[string]string) (exporter.Exporter, error) {
 	exp := &ImapExporter{
 		ctx: ctx,
-		buf: make([]byte, 2*MB),
 	}
 
 	err := exp.connector.InitFromConfig(config)
@@ -41,27 +34,17 @@ func (exp *ImapExporter) Root() string {
 }
 
 func (exp *ImapExporter) CreateDirectory(pathname string) error {
-	client, err := exp.getClient()
+	session, err := exp.getSession()
 	if err != nil {
 		return err
 	}
 
-	pathname, _ = strings.CutPrefix(pathname, "/")
-
-	opts := imap.CreateOptions{}
-	err = client.Create(pathname, &opts).Wait()
-	if err != nil {
-		e, ok := err.(*imap.Error)
-		if ok && e.Code == imap.ResponseCodeAlreadyExists {
-			return nil
-		}
-		return err
-	}
-	return nil
+	mailbox, _ := strings.CutPrefix(pathname, "/")
+	return session.Create(mailbox, true)
 }
 
 func (exp *ImapExporter) StoreFile(pathname string, fp io.Reader, size int64) error {
-	client, err := exp.getClient()
+	session, err := exp.getSession()
 	if err != nil {
 		return err
 	}
@@ -69,26 +52,9 @@ func (exp *ImapExporter) StoreFile(pathname string, fp io.Reader, size int64) er
 	pathname, _ = strings.CutPrefix(pathname, "/")
 	// XXX
 	path := strings.SplitN(pathname, "/", 2)
+	mailbox := path[0]
 
-	opts := imap.AppendOptions{}
-	appendCmd := client.Append(path[0], size, &opts)
-	w, err := io.CopyBuffer(appendCmd, fp, exp.buf)
-	if err != nil {
-		return fmt.Errorf("failed to write message: %w", err)
-	}
-	if w != size {
-		return fmt.Errorf("inconsistent number of bytes written")
-	}
-	err = appendCmd.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close message: %w", err)
-	}
-	_, err = appendCmd.Wait()
-	if err != nil {
-		return fmt.Errorf("APPEND command failed: %w", err)
-	}
-
-	return nil
+	return session.Append(mailbox, fp, size)
 }
 
 func (exp *ImapExporter) SetPermissions(pathname string, fileinfo *objects.FileInfo) error {
@@ -96,19 +62,19 @@ func (exp *ImapExporter) SetPermissions(pathname string, fileinfo *objects.FileI
 }
 
 func (exp *ImapExporter) Close() error {
-	if exp.client != nil {
-		return exp.client.Logout().Wait()
+	if exp.session != nil {
+		return exp.session.Logout()
 	}
 	return nil
 }
 
-func (exp *ImapExporter) getClient() (*imapclient.Client, error) {
-	if exp.client == nil {
-		client, err := exp.connector.Connect()
+func (exp *ImapExporter) getSession() (*common.ImapSession, error) {
+	if exp.session == nil {
+		session, err := exp.connector.Connect()
 		if err != nil {
 			return nil, err
 		}
-		exp.client = client
+		exp.session = session
 	}
-	return exp.client, nil
+	return exp.session, nil
 }

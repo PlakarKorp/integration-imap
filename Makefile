@@ -1,13 +1,21 @@
 GO = go
+PLAKAR = ../plakar/plakar
+VERSION = v0.0.1
 
-all:
+all: build create uninstall install
+
+build:
 	${GO} build -v -o imapImporter ./plugin/importer
 	${GO} build -v -o imapExporter ./plugin/exporter
 
-install: clean all
-	../plakar/plakar pkg create manifest.yaml
-	../plakar/plakar pkg uninstall imap-v1.0.0.ptar
-	../plakar/plakar pkg install imap-v1.0.0.ptar
+create:
+	${PLAKAR} pkg create manifest.yaml
+
+uninstall:
+	${PLAKAR} pkg ls | grep imap-v | xargs ${PLAKAR} pkg uninstall
+
+install:
+	${PLAKAR} pkg install imap-${VERSION}.ptar
 
 clean:
-	rm -f imapImporter imapExporter imap-v*.ptar
+	rm -f imapImporter imapExporter imap-*.ptar

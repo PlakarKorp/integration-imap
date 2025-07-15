@@ -1,6 +1,6 @@
 name: imap
 description: imap backend
-version: 0.0.1
+version: 0.1.0
 connectors:
 - type: importer
   executable: imapImporter

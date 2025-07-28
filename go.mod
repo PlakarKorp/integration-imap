@@ -1,6 +1,6 @@
 module github.com/PlakarKorp/integration-imap
 
-go 1.24.4
+go 1.24.1
 
 require (
 	github.com/PlakarKorp/go-kloset-sdk v0.1.0-devel.9b7880d

@@ -15,14 +15,11 @@ import (
 )
 
 type ImapImporter struct {
-	ctx       context.Context
 	connector common.ImapConnector
 }
 
 func NewImapImporter(ctx context.Context, opts *importer.Options, name string, config map[string]string) (importer.Importer, error) {
-	imp := &ImapImporter{
-		ctx: ctx,
-	}
+	imp := &ImapImporter{}
 	err := imp.connector.InitFromConfig(config)
 	if err != nil {
 		return nil, err
@@ -31,19 +28,19 @@ func NewImapImporter(ctx context.Context, opts *importer.Options, name string, c
 	return imp, nil
 }
 
-func (imp *ImapImporter) Origin() string {
-	return imp.connector.Address
+func (imp *ImapImporter) Origin(ctx context.Context) (string, error) {
+	return imp.connector.Address, nil
 }
 
-func (imp *ImapImporter) Type() string {
-	return "imap"
+func (imp *ImapImporter) Type(ctx context.Context) (string, error) {
+	return "imap", nil
 }
 
-func (imp *ImapImporter) Root() string {
-	return "/"
+func (imp *ImapImporter) Root(ctx context.Context) (string, error) {
+	return "/", nil
 }
 
-func (imp *ImapImporter) Scan() (<-chan *importer.ScanResult, error) {
+func (imp *ImapImporter) Scan(ctx context.Context) (<-chan *importer.ScanResult, error) {
 	result := make(chan *importer.ScanResult, 10)
 	go func() {
 		defer close(result)
@@ -73,7 +70,7 @@ func (imp *ImapImporter) Scan() (<-chan *importer.ScanResult, error) {
 	return result, nil
 }
 
-func (imp *ImapImporter) Close() error {
+func (imp *ImapImporter) Close(ctx context.Context) error {
 	return nil
 }
 

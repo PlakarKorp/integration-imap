@@ -11,15 +11,12 @@ import (
 )
 
 type ImapExporter struct {
-	ctx       context.Context
 	connector common.ImapConnector
 	session   *common.ImapSession
 }
 
 func NewImapExporter(ctx context.Context, opts *exporter.Options, name string, config map[string]string) (exporter.Exporter, error) {
-	exp := &ImapExporter{
-		ctx: ctx,
-	}
+	exp := &ImapExporter{}
 
 	err := exp.connector.InitFromConfig(config)
 	if err != nil {
@@ -29,11 +26,11 @@ func NewImapExporter(ctx context.Context, opts *exporter.Options, name string, c
 	return exp, nil
 }
 
-func (exp *ImapExporter) Root() string {
-	return "/"
+func (exp *ImapExporter) Root(ctx context.Context) (string, error) {
+	return "/", nil
 }
 
-func (exp *ImapExporter) CreateDirectory(pathname string) error {
+func (exp *ImapExporter) CreateDirectory(ctx context.Context, pathname string) error {
 	session, err := exp.getSession()
 	if err != nil {
 		return err
@@ -43,7 +40,7 @@ func (exp *ImapExporter) CreateDirectory(pathname string) error {
 	return session.Create(mailbox, true)
 }
 
-func (exp *ImapExporter) StoreFile(pathname string, fp io.Reader, size int64) error {
+func (exp *ImapExporter) StoreFile(ctx context.Context, pathname string, fp io.Reader, size int64) error {
 	session, err := exp.getSession()
 	if err != nil {
 		return err
@@ -57,11 +54,11 @@ func (exp *ImapExporter) StoreFile(pathname string, fp io.Reader, size int64) er
 	return session.Append(mailbox, fp, size)
 }
 
-func (exp *ImapExporter) SetPermissions(pathname string, fileinfo *objects.FileInfo) error {
+func (exp *ImapExporter) SetPermissions(ctx context.Context, pathname string, fileinfo *objects.FileInfo) error {
 	return nil
 }
 
-func (exp *ImapExporter) Close() error {
+func (exp *ImapExporter) Close(ctx context.Context) error {
 	if exp.session != nil {
 		return exp.session.Logout()
 	}

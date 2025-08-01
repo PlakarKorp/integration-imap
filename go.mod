@@ -3,14 +3,14 @@ module github.com/PlakarKorp/integration-imap
 go 1.24.1
 
 require (
-	github.com/PlakarKorp/go-kloset-sdk v0.1.0-devel.72b3b2b
-	github.com/PlakarKorp/kloset v1.0.1-beta.3
+	github.com/PlakarKorp/go-kloset-sdk v0.1.0-devel.03f7be1
+	github.com/PlakarKorp/kloset v1.0.1-beta.4
 	github.com/emersion/go-imap/v2 v2.0.0-beta.5
 )
 
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/PlakarKorp/plakar v1.0.3-devel.d5a3fd0 // indirect
+	github.com/PlakarKorp/plakar v1.0.3-devel.dc37b62 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/crlib v0.0.0-20250718215705-7ff5051265b9 // indirect
@@ -24,7 +24,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43 // indirect
-	github.com/getsentry/sentry-go v0.34.1 // indirect
+	github.com/getsentry/sentry-go v0.35.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

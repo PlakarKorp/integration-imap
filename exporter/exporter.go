@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 
@@ -56,6 +57,10 @@ func (exp *ImapExporter) StoreFile(ctx context.Context, pathname string, fp io.R
 
 func (exp *ImapExporter) SetPermissions(ctx context.Context, pathname string, fileinfo *objects.FileInfo) error {
 	return nil
+}
+
+func (exp *ImapExporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	return errors.ErrUnsupported
 }
 
 func (exp *ImapExporter) Close(ctx context.Context) error {

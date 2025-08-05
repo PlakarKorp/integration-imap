@@ -2,28 +2,20 @@
 
 ## Overview
 
-The **Plakar IMAP integration** enables seamless backup and restoration of IMAP mail folders to and from a [Kloset repository](/posts/2025-04-29/kloset-the-immutable-data-store/).
+IMAP (Internet Message Access Protocol) is a standard email protocol used by mail clients to retrieve messages from a mail server over a TCP/IP connection.
+It is widely adopted for managing and accessing email stored on remote servers.
 
-## Installation
+This integration allows:
 
-First, build the binaries:
+- **Seamless backup of emails hosted on IMAP servers into a Kloset repository:**
+Capture and store entire mailbox contents (including folders, metadata, and attachments) for long-term archival and audit purposes.
 
-```bash
-$ go build -o imapImporter ./plugin/importer
-$ go build -o imapExporter ./plugin/exporter
-```
+- **Direct restoration of mailbox snapshots to IMAP servers:**
+Restore previously backed-up snapshots directly to any compatible IMAP destination, maintaining folder structure and message integrity.
 
-Create the ptar plugin:
+- **Compatibility with legacy and modern email systems using IMAP:**
+Ensures support for a wide range of mail providers and servers, including self-hosted and enterprise environments.
 
-```bash
-$ plakar pkg create manifest.yaml
-```
-
-This should produce `imap-vX.Y.Z.ptar` that can be installed with:
-
-```bash
-$ plakar pkg add imap-v0.0.1.ptar
-```
 
 ## Configuration
 
@@ -35,11 +27,14 @@ The configuration parameters are as follow:
 - `tls`:      TlS mode to use.  Possible values are tls (the default), starttls and no-tls.
 - `tls_no_verify`: If set to yes, the client will not verify the server certificate in tls mode.
 
-## Example Usage
+## Examples
 
 ```bash
 # configure an IMAP source connector
-$ plakar source add myIMAPsrc imap://imap.mydomain.com:143 username=myuser password=mypassword tls=starttls
+$ plakar source add myIMAPsrc imap://imap.mydomain.com:143 \
+    username=myuser     \
+    password=mypassword \
+    tls=starttls
 
 # backup the mailbox
 $ plakar backup @myIMAPsrc
@@ -50,9 +45,3 @@ $ plakar destination add myIMAPdst imap://imap.alsomydomain.com:143 username=als
 # restore the snapshot to the destination
 $ plakar restore -to @myIMAPdst <snapid>
 ```
-
-## Questions, Feedback, and Support
-
-Found a bug? [Open an issue on GitHub](https://github.com/PlakarKorp/plakar/issues/new?title=Bug%20report%20on%20Filesystem%20integration&body=Please%20provide%20a%20detailed%20description%20of%20the%20issue.%0A%0A**Plakar%20version**)
-
-Join our [Discord community](https://discord.gg/uuegtnF2Q5) for real-time help and discussions.

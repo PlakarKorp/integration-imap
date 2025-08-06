@@ -6,23 +6,24 @@ The **Plakar IMAP integration** enables seamless backup and restoration of IMAP 
 
 ## Installation
 
-First, build the binaries:
+If a pre-built package exists for your system and architecture,
+you can simply install it using:
 
-```bash
-$ go build -o imapImporter ./plugin/importer
-$ go build -o imapExporter ./plugin/exporter
+```sh
+$ plakar pkg add imap
 ```
 
-Create the ptar plugin:
+Otherwise,
+you can first build it:
 
-```bash
-$ plakar pkg create manifest.yaml
+```sh
+$ plakar pkg build imap
 ```
 
 This should produce `imap-vX.Y.Z.ptar` that can be installed with:
 
 ```bash
-$ plakar pkg add imap-v0.0.1.ptar
+$ plakar pkg add ./imap-v0.1.0.ptar
 ```
 
 ## Configuration
@@ -35,7 +36,7 @@ The configuration parameters are as follow:
 - `tls`:      TlS mode to use.  Possible values are tls (the default), starttls and no-tls.
 - `tls_no_verify`: If set to yes, the client will not verify the server certificate in tls mode.
 
-## Example Usage
+## Examples
 
 ```bash
 # configure an IMAP source connector

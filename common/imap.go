@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net/url"
 	"strings"
 
 	"github.com/emersion/go-imap/v2"
@@ -31,22 +32,37 @@ type ImapSession struct {
 
 func (ic *ImapConnector) InitFromConfig(config map[string]string) error {
 	location := config["location"]
-	location, _ = strings.CutPrefix(location, "imap://")
+
+	endpoint, err := url.Parse(location)
+	if err != nil {
+		return err
+	}
+
+	location = endpoint.Host
 	ic.Address = location
 
-	v, ok := config["username"]
-	if !ok {
-		return fmt.Errorf("Missing username")
-	}
-	ic.Username = v
+	if endpoint.User != nil {
+		if endpoint.User.Username() != "" {
+			ic.Username = endpoint.User.Username()
+		}
+		if p, ok := endpoint.User.Password(); ok {
+			ic.Password = p
+		}
+	} else {
+		v, ok := config["username"]
+		if !ok {
+			return fmt.Errorf("Missing username")
+		}
+		ic.Username = v
 
-	v, ok = config["password"]
-	if !ok {
-		return fmt.Errorf("Missing password")
+		v, ok = config["password"]
+		if !ok {
+			return fmt.Errorf("Missing password")
+		}
+		ic.Password = v
 	}
-	ic.Password = v
 
-	v, ok = config["tls"]
+	v, ok := config["tls"]
 	if !ok {
 		v = "starttls"
 	}
@@ -122,27 +138,11 @@ func (session *ImapSession) Create(mailbox string, existOk bool) error {
 }
 
 func (session *ImapSession) List() ([]*imap.ListData, error) {
-	var res []*imap.ListData
-
-	listCmd := session.Client.List("", "%", &imap.ListOptions{
-		ReturnStatus: &imap.StatusOptions{
-			NumMessages: true,
-			NumUnseen:   true,
-		},
-	})
-
-	for {
-		mbox := listCmd.Next()
-		if mbox == nil {
-			break
-		}
-		res = append(res, mbox)
+	// Basic RFC3501 LIST, compatible with most servers
+	res, err := session.Client.List("", "*", nil).Collect()
+	if err != nil {
+		return nil, fmt.Errorf("LIST command failed: %w", err)
 	}
-
-	if err := listCmd.Close(); err != nil {
-		return nil, fmt.Errorf("LIST command failed: %v", err)
-	}
-
 	return res, nil
 }
 
@@ -170,4 +170,31 @@ func (session *ImapSession) Append(mailbox string, fp io.Reader, size int64) err
 
 func (session *ImapSession) Logout() error {
 	return session.Client.Logout().Wait()
+}
+
+func SafeName(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "message"
+	}
+
+	s = strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z':
+			return r
+		case r >= 'A' && r <= 'Z':
+			return r
+		case r >= '0' && r <= '9':
+			return r
+		case r == '_' || r == '.':
+			return r
+		default:
+			return '_'
+		}
+	}, s)
+	s = strings.Join(strings.Fields(s), " ") // collapse spaces
+	if len(s) > 80 {
+		s = s[:80]
+	}
+	return s
 }

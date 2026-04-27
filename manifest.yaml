@@ -1,19 +1,19 @@
-name: imap
-display_name: IMAP
-description: Integration providing import and export capabilities for IMAP accounts.
+name: scaleway-instance
+display_name: Scaleway Instance
+description: Integration providing storage, import and export capabilities to and from/to instances hosted on Scaleway
 api_version: v1.1.0
 tier: official
-homepage: https://github.com/PlakarKorp/integration-imap
+homepage: https://github.com/PlakarKorp/integration-scaleway-instance
 license: ISC
 contact: mailto:help@plakar.io
 connectors:
 - type: importer
-  executable: imapImporter
-  protocols: [imap]
+  executable: scalewayInstanceImporter
+  protocols: [scaleway+instance]
   validator: ./importer/schema.json
   class: compute
 #- type: exporter
-#  executable: imapExporter
-#  protocols: [imap]
+#  executable: scalewayInstanceExporter
+#  protocols: [scaleway-instance]
 #  validator: ./exporter/schema.json
 #  class: compute
